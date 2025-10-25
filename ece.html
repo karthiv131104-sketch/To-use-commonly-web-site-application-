@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECE Quiz Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#1a2a6c,#b21f1f,#fdbb2d);
+    background-size: 300% 300%;
+    animation: gradient 15s ease infinite;
+    display:flex;justify-content:center;align-items:center;height:100vh;margin:0;
+  }
+  @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  .glass {
+    background:rgba(255,255,255,0.1);padding:30px;border-radius:15px;
+    box-shadow:0 8px 32px 0 rgba(31,38,135,0.37);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    color:white;width:350px;text-align:center;
+  }
+  input[type=text],input[type=password] {
+    width:90%;padding:10px;margin:10px 0;border:none;border-radius:8px;
+  }
+  button {padding:10px 20px;border:none;border-radius:8px;background:#4CAF50;color:white;cursor:pointer}
+  button:hover{background:#45a049}
+  .quiz{display:none;max-height:70vh;overflow-y:auto;text-align:left}
+  .question{margin-bottom:15px}
+  .options label{display:block;margin:5px 0;padding:5px;border-radius:5px;cursor:pointer}
+  .result{margin-top:20px;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="glass" id="loginBox">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p>Username: <b>Karthi</b><br>Password: <b>Blackarch</b></p>
+</div>
+
+<div class="glass quiz" id="quizBox">
+  <h2>ECE Quiz</h2>
+  <div id="quiz"></div>
+  <button onclick="submitQuiz()">Submit</button>
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+const questions = [
+  {q:"Nyquist theorem relates to:",opts:["Sampling","Amplification","Modulation","Oscillation"],a:0},
+  {q:"Which flip-flop is used in counters?",opts:["JK","SR","D","T"],a:3},
+  {q:"Which diode is used in voltage regulation?",opts:["Tunnel","Varactor","Zener","PIN"],a:2},
+  {q:"Maximum power transfer occurs when load resistance equals?",opts:["Zero","Source resistance","Twice source","Infinite"],a:1},
+  {q:"What is the unit of magnetic flux?",opts:["Tesla","Henry","Weber","Gauss"],a:2},
+  {q:"FFT stands for:",opts:["Fast Fourier Transform","Frequency Feedback Technique","Fast Field Transistor","Finite Fourier Table"],a:0},
+  {q:"In CMOS, power dissipation is mainly due to:",opts:["Leakage","Static current","Switching activity","Thermal runaway"],a:2},
+  {q:"Thevenin’s theorem replaces network with:",opts:["Current source","Voltage source + resistance","Capacitor","Inductor"],a:1},
+  {q:"Which filter has maximally flat response?",opts:["Butterworth","Chebyshev","Elliptic","Bessel"],a:0},
+  {q:"The cutoff frequency in RC low-pass filter is:",opts:["1/RC","RC","1/(2πRC)","2πRC"],a:2},
+  {q:"Which antenna is used for satellite communication?",opts:["Horn","Dipole","Parabolic dish","Loop"],a:2},
+  {q:"EEPROM can be erased by:",opts:["UV light","Electric field","Magnetic field","Heat"],a:1},
+  {q:"Which modulation is used in TV video?",opts:["FM","AM","QPSK","ASK"],a:1},
+  {q:"Root locus technique is used in:",opts:["Digital systems","Control systems","Communication","Antennas"],a:1},
+  {q:"Cut-in voltage of silicon diode is:",opts:["0.2V","0.3V","0.7V","1.1V"],a:2},
+  {q:"Which law states induced emf is proportional to rate of flux change?",opts:["Ohm’s","Lenz’s","Faraday’s","Kirchhoff’s"],a:2},
+  {q:"MOSFET is a:",opts:["Unipolar device","Bipolar device","Vacuum tube","Photodiode"],a:0},
+  {q:"Binary 1110 equals decimal:",opts:["13","14","15","12"],a:1},
+  {q:"Full adder adds:",opts:["2 bits","3 bits","4 bits","1 bit"],a:1},
+  {q:"Which device stores charge in DRAM?",opts:["Inductor","Capacitor","Diode","Transistor"],a:1}
+];
+
+function login(){
+  let u=document.getElementById("username").value.trim();
+  let p=document.getElementById("password").value.trim();
+  if(u==="Karthi" && p==="Blackarch"){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("quizBox").style.display="block";
+    loadQuiz();
+  } else alert("Invalid username or password!");
+}
+
+function loadQuiz(){
+  const quiz=document.getElementById("quiz");quiz.innerHTML="";
+  questions.forEach((q,i)=>{
+    let qDiv=document.createElement("div");qDiv.className="question";
+    qDiv.innerHTML=`<p><b>Q${i+1}. ${q.q}</b></p>`;
+    let optDiv=document.createElement("div");optDiv.className="options";
+    q.opts.forEach((opt,j)=>{
+      optDiv.innerHTML+=`<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label>`;
+    });
+    qDiv.appendChild(optDiv);quiz.appendChild(qDiv);
+  });
+}
+
+function submitQuiz(){
+  let score=0;
+  questions.forEach((q,i)=>{
+    let chosen=document.querySelector(`input[name="q${i}"]:checked`);
+    let opts=document.querySelectorAll(`input[name="q${i}"]`);
+    opts.forEach((o,j)=>{
+      if(j===q.a){
+        o.parentElement.style.background="green";
+        o.parentElement.style.color="white";
+      }
+    });
+    if(chosen && parseInt(chosen.value)===q.a) score++;
+  });
+  document.getElementById("result").innerText=`You scored ${score} / ${questions.length}`;
+  if(score===questions.length) generateCertificate("Jaiyapriya P");
+}
+
+function generateCertificate(name){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  doc.setFont("times","bold");doc.setFontSize(22);
+  doc.text("Anna University",105,40,null,null,"center");
+  doc.setFontSize(18);doc.text("Certificate of Excellence",105,60,null,null,"center");
+  doc.setFontSize(14);
+  doc.text(`This is to certify that ${name}`,105,90,null,null,"center");
+  doc.text("has successfully completed the ECE Quiz with full marks.",105,110,null,null,"center");
+  doc.text("Date: "+new Date().toLocaleDateString(),105,140,null,null,"center");
+  doc.text("Signature",170,160);
+  doc.save("Certificate.pdf");
+}
+</script>
+</body>
+</html>
